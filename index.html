@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Match Sénégal vs France</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="root">
+
+  <div id="topbar">
+    <div id="team-sen">
+      <span id="flag-sen">🇸🇳</span>
+      <span id="name-sen">Sénégal</span>
+      <span id="nick-sen">Lions de la Téranga</span>
+    </div>
+    <div id="scoreboard">
+      <span id="score">0 – 0</span>
+      <span id="phase-lbl">avant le match</span>
+    </div>
+    <div id="team-fra">
+      <span id="flag-fra">🇫🇷</span>
+      <span id="name-fra">France</span>
+      <span id="nick-fra">Les Bleus</span>
+    </div>
+  </div>
+
+  <div id="statbar">
+    <div id="pill-timer">⏱ <span id="timer-disp">0'</span></div>
+    <div id="pill-stade">🏟 Stade Abdoulaye Wade</div>
+    <div id="pill-groupe">Groupe A</div>
+    <div id="stat-sen-shots-box">Tirs SEN : <span id="stat-sen-shots">0</span></div>
+    <div id="stat-fra-shots-box">Tirs FRA : <span id="stat-fra-shots">0</span></div>
+    <div id="stat-cards-box">Cartons : <span id="stat-cards">0</span></div>
+    <div id="stat-subs-box">Rempl. : <span id="stat-subs">0</span></div>
+  </div>
+
+  <div id="ctrlbar">
+    <button id="btn-start">▶ Démarrer le match</button>
+    <button id="btn-pause">⏸ Pause</button>
+    <button id="btn-but-sen">⚽ But SEN</button>
+    <button id="btn-but-fra">⚽ But FRA</button>
+    <button id="btn-sub-sen">🔄 Rempl. SEN</button>
+    <button id="btn-sub-fra">🔄 Rempl. FRA</button>
+    <button id="btn-reset">↺ Reset</button>
+  </div>
+
+  <div id="field-wrapper">
+    <div class="field-label field-left">SEN</div>
+    <div class="field-label field-right">FRA</div>
+
+    <div id="pitch">
+      <div class="pitch-line top"></div>
+      <div class="pitch-line bottom"></div>
+      <div class="pitch-line half"></div>
+      <div class="goal-area left"></div>
+      <div class="goal-area right"></div>
+      <div class="penalty-box left"></div>
+      <div class="penalty-box right"></div>
+      <div class="center-circle"></div>
+      <div class="center-spot"></div>
+      <div class="ball"></div>
+
+      <!-- Sénégal -->
+      <div class="player sen sen-gk"  data-init="EM" data-name="Mendy"></div>
+      <div class="player sen sen-df1" data-init="SC" data-name="S.Ciss"></div>
+      <div class="player sen sen-df2" data-init="KK" data-name="Koulibaly"></div>
+      <div class="player sen sen-df3" data-init="AD" data-name="A.Diallo"></div>
+      <div class="player sen sen-df4" data-init="FB" data-name="Ballo-T."></div>
+      <div class="player sen sen-mf1" data-init="IG" data-name="Gueye"></div>
+      <div class="player sen sen-mf2" data-init="NM" data-name="N.Mendy"></div>
+      <div class="player sen sen-mf3" data-init="PM" data-name="PM.Sarr"></div>
+      <div class="player sen sen-fw1" data-init="IS" data-name="I.Sarr"></div>
+      <div class="player sen sen-fw2" data-init="BD" data-name="B.Dia"></div>
+      <div class="player sen sen-fw3" data-init="SM" data-name="Mané"></div>
+
+      <!-- France -->
+      <div class="player fra fra-gk"  data-init="HLL" data-name="Lloris"></div>
+      <div class="player fra fra-df1" data-init="PV"  data-name="Pavard"></div>
+      <div class="player fra fra-df2" data-init="VR"  data-name="Varane"></div>
+      <div class="player fra fra-df3" data-init="SL"  data-name="Saliba"></div>
+      <div class="player fra fra-df4" data-init="TH"  data-name="T.Hernandez"></div>
+      <div class="player fra fra-mf1" data-init="TC"  data-name="Tchouaméni"></div>
+      <div class="player fra fra-mf2" data-init="RB"  data-name="Rabiot"></div>
+      <div class="player fra fra-mf3" data-init="GZ"  data-name="Griezmann"></div>
+      <div class="player fra fra-fw1" data-init="DB"  data-name="Dembélé"></div>
+      <div class="player fra fra-fw2" data-init="KM"  data-name="Mbappé"></div>
+      <div class="player fra fra-fw3" data-init="KC"  data-name="Coman"></div>
+    </div>
+
+    <div class="field-legend">
+      <div class="legend-item">
+        <span class="legend-dot sen"></span>
+        <span>Sénégal</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot fra"></span>
+        <span>France</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot gk"></span>
+        <span>Gardiens</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-ball"></span>
+        <span>Ballon</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="mid">
+
+    <div id="panel-sen">
+      <div id="phdr-sen">
+        <span>🇸🇳</span>
+        <span>Sénégal</span>
+      </div>
+      <div id="list-sen">
+        <div id="p-sen-1"><span>1</span><span>Mendy E.</span><span>GK</span><span id="badges-sen-1"></span></div>
+        <div id="p-sen-2"><span>2</span><span>Bouna Sarr</span><span>DD</span><span id="badges-sen-2"></span></div>
+        <div id="p-sen-3"><span>3</span><span>Koulibaly</span><span>DC</span><span id="badges-sen-3"></span></div>
+        <div id="p-sen-4"><span>4</span><span>Abdou Diallo</span><span>DCG</span><span id="badges-sen-4"></span></div>
+        <div id="p-sen-23"><span>23</span><span>Jakobs</span><span>DG</span><span id="badges-sen-23"></span></div>
+        <div id="p-sen-5"><span>5</span><span>Idrissa Gueye</span><span>MD</span><span id="badges-sen-5"></span></div>
+        <div id="p-sen-6"><span>6</span><span>Kouyaté</span><span>MC</span><span id="badges-sen-6"></span></div>
+        <div id="p-sen-17"><span>17</span><span>N. Mendy</span><span>MC</span><span id="badges-sen-17"></span></div>
+        <div id="p-sen-11"><span>11</span><span>I. Sarr</span><span>AD</span><span id="badges-sen-11"></span></div>
+        <div id="p-sen-7"><span>7</span><span>Sadio Mané</span><span>AT</span><span id="badges-sen-7"></span></div>
+        <div id="p-sen-9"><span>9</span><span>Boulaye Dia</span><span>AG</span><span id="badges-sen-9"></span></div>
+      </div>
+    </div>
+
+    <div id="panel-fra">
+      <div id="phdr-fra">
+        <span>🇫🇷</span>
+        <span>France</span>
+      </div>
+      <div id="list-fra">
+        <div id="p-fra-1"><span>1</span><span>Lloris</span><span>GK</span><span id="badges-fra-1"></span></div>
+        <div id="p-fra-2"><span>2</span><span>Pavard</span><span>DD</span><span id="badges-fra-2"></span></div>
+        <div id="p-fra-4"><span>4</span><span>Varane</span><span>DC</span><span id="badges-fra-4"></span></div>
+        <div id="p-fra-6"><span>6</span><span>Saliba</span><span>DCG</span><span id="badges-fra-6"></span></div>
+        <div id="p-fra-22"><span>22</span><span>T. Hernandez</span><span>DG</span><span id="badges-fra-22"></span></div>
+        <div id="p-fra-8"><span>8</span><span>Tchouaméni</span><span>MD</span><span id="badges-fra-8"></span></div>
+        <div id="p-fra-14"><span>14</span><span>Rabiot</span><span>MC</span><span id="badges-fra-14"></span></div>
+        <div id="p-fra-7"><span>7</span><span>Griezmann</span><span>MC</span><span id="badges-fra-7"></span></div>
+        <div id="p-fra-11"><span>11</span><span>Dembélé</span><span>AD</span><span id="badges-fra-11"></span></div>
+        <div id="p-fra-10"><span>10</span><span>Mbappé</span><span>AT</span><span id="badges-fra-10"></span></div>
+        <div id="p-fra-20"><span>20</span><span>Coman</span><span>AG</span><span id="badges-fra-20"></span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="actpanel">
+    <div id="actlbl">📋 Événements du match</div>
+    <div id="evlist">
+      <div id="no-event">Aucun événement.</div>
+    </div>
+  </div>
+
+  <div id="modal-zone"></div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
