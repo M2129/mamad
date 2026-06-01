@@ -23,6 +23,7 @@ html, body {
     radial-gradient(circle at 85% 12%, rgba(255,221,49,0.13), transparent 18%),
     linear-gradient(180deg, #062845 0%, #02101f 46%, #020710 100%);
   color: var(--text);
+  background-image: url(imagecdm/WhatsApp\ Image\ 2026-05-31\ at\ 22.55.32.jpeg);
 }
 
 #root {
