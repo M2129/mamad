@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const chooseRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const wait         = (ms) => new Promise(r => setTimeout(r, ms));
 
-  // ── Positions de base de chaque joueur (lues une fois au démarrage) ──
+  // ── Positions de base mémorisées au démarrage ──
   const basePositions = new Map();
 
   function initBasePositions() {
@@ -56,14 +56,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ── Déplacer un joueur vers une position % ──
+  // ── Déplacer un joueur ──
   function movePlayerTo(player, leftPct, topPct, duration = 350) {
     player.style.transition = `left ${duration}ms ease, top ${duration}ms ease`;
     player.style.left = `${leftPct}%`;
     player.style.top  = `${topPct}%`;
   }
 
-  // ── Ramener un joueur à sa position de base ──
+  // ── Ramener un joueur à sa base ──
   function resetPlayerPos(player, duration = 600) {
     const base = basePositions.get(player);
     if (!base) return;
@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
     allPlayers.forEach(p => resetPlayerPos(p, duration));
   }
 
-  // ── Déplacer le ballon vers une position % ──
+  // ── Déplacer le ballon ──
   function moveBallTo(leftPct, topPct, duration = 380) {
     return new Promise(resolve => {
       ball.style.transition = `left ${duration}ms ease, top ${duration}ms ease`;
@@ -87,47 +87,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ── Passe : ballon + porteur se déplace vers receveur ──
+  // ── Passe entre deux joueurs ──
   async function pass(carrier, receiver, duration = 300) {
-    const recvBase = basePositions.get(receiver);
-    if (!recvBase) return;
-
-    // porteur court légèrement vers le receveur
+    const recvBase    = basePositions.get(receiver);
     const carrierBase = basePositions.get(carrier);
+    if (!recvBase) return receiver;
+
+    // porteur court vers le receveur
     if (carrierBase) {
       const midLeft = carrierBase.left + (recvBase.left - carrierBase.left) * 0.35;
       const midTop  = carrierBase.top  + (recvBase.top  - carrierBase.top)  * 0.35;
       movePlayerTo(carrier, midLeft, midTop, duration * 0.8);
     }
 
-    // les coéquipiers s'écartent légèrement pour créer de l'espace
+    // coéquipiers s'écartent
     const team = senPlayers.includes(carrier) ? senPlayers : fraPlayers;
     team.forEach(p => {
       if (p === carrier || p === receiver) return;
       const base = basePositions.get(p);
       if (!base) return;
-      const jitter = 2.5;
       movePlayerTo(p,
-        base.left + randomFloat(-jitter, jitter),
-        base.top  + randomFloat(-jitter, jitter),
+        base.left + randomFloat(-2.5, 2.5),
+        base.top  + randomFloat(-2.5, 2.5),
         duration
       );
     });
 
-    // adversaires se rapprochent du ballon (pression)
+    // adversaires pressent
     const opponents = senPlayers.includes(carrier) ? fraPlayers : senPlayers;
-    const nearest = opponents
+    opponents
       .filter(p => !p.classList.contains("fra-gk") && !p.classList.contains("sen-gk"))
-      .slice(0, 2);
-    nearest.forEach(p => {
-      const base = basePositions.get(p);
-      if (!base) return;
-      const pressLeft = base.left + (recvBase.left - base.left) * 0.2;
-      const pressTop  = base.top  + (recvBase.top  - base.top)  * 0.2;
-      movePlayerTo(p, pressLeft, pressTop, duration * 1.2);
-    });
+      .slice(0, 2)
+      .forEach(p => {
+        const base = basePositions.get(p);
+        if (!base) return;
+        movePlayerTo(p,
+          base.left + (recvBase.left - base.left) * 0.2,
+          base.top  + (recvBase.top  - base.top)  * 0.2,
+          duration * 1.2
+        );
+      });
 
-    // receveur active + ballon va vers lui
+    // ballon va vers le receveur
     receiver.classList.add("active");
     await moveBallTo(recvBase.left, recvBase.top, duration);
     carrier.classList.remove("active");
@@ -147,78 +148,168 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ── Badge ⚽ dans le panel joueurs ──
+  function addGoalBadge(team, playerPosClass) {
+    const senBadgeMap = {
+      "sen-gk":  "badges-sen-1",
+      "sen-df1": "badges-sen-2",
+      "sen-df2": "badges-sen-3",
+      "sen-df3": "badges-sen-4",
+      "sen-df4": "badges-sen-23",
+      "sen-mf1": "badges-sen-5",
+      "sen-mf2": "badges-sen-6",
+      "sen-mf3": "badges-sen-17",
+      "sen-fw1": "badges-sen-11",
+      "sen-fw2": "badges-sen-9",
+      "sen-fw3": "badges-sen-7",
+    };
+    const fraBadgeMap = {
+      "fra-gk":  "badges-fra-1",
+      "fra-df1": "badges-fra-2",
+      "fra-df2": "badges-fra-4",
+      "fra-df3": "badges-fra-6",
+      "fra-df4": "badges-fra-22",
+      "fra-mf1": "badges-fra-8",
+      "fra-mf2": "badges-fra-14",
+      "fra-mf3": "badges-fra-7",
+      "fra-fw1": "badges-fra-11",
+      "fra-fw2": "badges-fra-20",
+      "fra-fw3": "badges-fra-10",
+    };
+
+    const map     = team === "sen" ? senBadgeMap : fraBadgeMap;
+    const badgeId = map[playerPosClass];
+    if (!badgeId) return;
+
+    const badgeEl = document.getElementById(badgeId);
+    if (!badgeEl) return;
+
+    badgeEl.textContent += "⚽";
+  }
+
   // ── Animation but ──
   async function animateGoal(scoringTeam) {
-    const attackPlayers  = scoringTeam === "sen" ? senPlayers : fraPlayers;
-    const defendPlayers  = scoringTeam === "sen" ? fraPlayers : senPlayers;
-    const gkClass        = scoringTeam === "sen" ? "fra-gk" : "sen-gk";
-    const gk             = defendPlayers.find(p => p.classList.contains(gkClass));
-    const fwClass        = scoringTeam === "sen" ? ["sen-fw1","sen-fw2","sen-fw3"] : ["fra-fw1","fra-fw2","fra-fw3"];
-    const shooter        = attackPlayers.find(p => fwClass.some(c => p.classList.contains(c)))
-                           || chooseRandom(attackPlayers);
+  const attackPlayers = scoringTeam === "sen" ? senPlayers : fraPlayers;
+  const defendPlayers = scoringTeam === "sen" ? fraPlayers : senPlayers;
+  const gkClass       = scoringTeam === "sen" ? "fra-gk" : "sen-gk";
+  const gk            = defendPlayers.find(p => p.classList.contains(gkClass));
+  const fwClasses     = scoringTeam === "sen"
+    ? ["sen-fw1", "sen-fw2", "sen-fw3"]
+    : ["fra-fw1", "fra-fw2", "fra-fw3"];
 
-    // passes vers le buteur
-    await passBall(attackPlayers, 3, 240);
+  // choisir un buteur
+  const shooterClass    = fwClasses[randomInt(0, fwClasses.length - 1)];
+  const shooter         = attackPlayers.find(p => p.classList.contains(shooterClass))
+                          || chooseRandom(attackPlayers);
 
-    // le buteur fonce vers la cage
-    const goalLeft = scoringTeam === "sen" ? 88 : 12;
-    const goalTop  = randomInt(35, 65);
-    shooter.classList.add("active");
-    movePlayerTo(shooter, goalLeft, goalTop, 350);
+  // classe position du buteur pour le badge
+  const shooterPosClass = Array.from(shooter.classList).find(c =>
+    c.startsWith("sen-") || c.startsWith("fra-")
+  );
 
-    // défenseurs essaient de bloquer
-    const defenders = defendPlayers.filter(p =>
-      !p.classList.contains(gkClass)
-    ).slice(0, 2);
-    defenders.forEach(p => {
-      movePlayerTo(p, goalLeft + (scoringTeam === "sen" ? -8 : 8), goalTop + randomFloat(-10, 10), 350);
+  // ── récupérer le nom du buteur depuis le panel ──
+  const senNameMap = {
+    "sen-gk":  "Mendy E.",
+    "sen-df1": "S.Ciss",
+    "sen-df2": "Koulibaly",
+    "sen-df3": "A.Diallo",
+    "sen-df4": "Ballo-T.",
+    "sen-mf1": "Gueye",
+    "sen-mf2": "N.Mendy",
+    "sen-mf3": "PM.Sarr",
+    "sen-fw1": "I.Sarr",
+    "sen-fw2": "B.Dia",
+    "sen-fw3": "Mané",
+  };
+  const fraNameMap = {
+    "fra-gk":  "Lloris",
+    "fra-df1": "Pavard",
+    "fra-df2": "Varane",
+    "fra-df3": "Saliba",
+    "fra-df4": "T.Hernandez",
+    "fra-mf1": "Tchouaméni",
+    "fra-mf2": "Rabiot",
+    "fra-mf3": "Griezmann",
+    "fra-fw1": "Dembélé",
+    "fra-fw2": "Mbappé",
+    "fra-fw3": "Coman",
+  };
+
+  const nameMap    = scoringTeam === "sen" ? senNameMap : fraNameMap;
+  const scorerName = shooterPosClass ? (nameMap[shooterPosClass] || "Inconnu") : "Inconnu";
+  const teamLabel  = scoringTeam === "sen" ? "🇸🇳 Sénégal" : "🇫🇷 France";
+
+  // passes vers l'attaque
+  await passBall(attackPlayers, 3, 240);
+
+  // buteur fonce vers la cage
+  const goalLeft = scoringTeam === "sen" ? 88 : 12;
+  const goalTop  = randomInt(35, 65);
+  shooter.classList.add("active");
+  movePlayerTo(shooter, goalLeft, goalTop, 350);
+
+  // défenseurs tentent de bloquer
+  defendPlayers
+    .filter(p => !p.classList.contains(gkClass))
+    .slice(0, 2)
+    .forEach(p => {
+      movePlayerTo(p,
+        goalLeft + (scoringTeam === "sen" ? -8 : 8),
+        goalTop  + randomFloat(-10, 10),
+        350
+      );
     });
 
-    await moveBallTo(goalLeft, goalTop, 350);
+  await moveBallTo(goalLeft, goalTop, 350);
 
-    // tir sur le gardien
-    if (gk) {
-      const gkBase = basePositions.get(gk);
-      if (gkBase) movePlayerTo(gk, gkBase.left, goalTop, 200);
-      gk.classList.add("active");
-    }
-
-    // ballon entre dans la cage
-    const netLeft = scoringTeam === "sen" ? 99 : 1;
-    await moveBallTo(netLeft, randomInt(40, 60), 280);
-
-    if (gk) {
-      gk.classList.remove("active");
-      // gardien battu tombe légèrement
-      const gkBase = basePositions.get(gk);
-      if (gkBase) movePlayerTo(gk, gkBase.left, gkBase.top + 8, 200);
-    }
-    shooter.classList.remove("active");
-
-    // flash de but
-    ball.style.transition = "none";
-    ball.style.boxShadow = scoringTeam === "sen"
-      ? "0 0 32px 10px rgba(100,255,100,1)"
-      : "0 0 32px 10px rgba(255,100,100,1)";
-
-    // célébration : toute l'équipe converge vers la cage
-    attackPlayers.forEach(p => {
-      const side = scoringTeam === "sen" ? randomInt(75, 92) : randomInt(8, 25);
-      movePlayerTo(p, side, randomInt(25, 75), 500);
-    });
-
-    await wait(700);
-
-    // retour au centre
-    ball.style.transition = "left 0.6s ease, top 0.6s ease, box-shadow 0.5s ease";
-    ball.style.boxShadow  = "";
-    ball.style.left = "50%";
-    ball.style.top  = "50%";
-
-    await wait(600);
-    resetAllPositions(700);
-    await wait(700);
+  // gardien se positionne
+  if (gk) {
+    const gkBase = basePositions.get(gk);
+    if (gkBase) movePlayerTo(gk, gkBase.left, goalTop, 200);
+    gk.classList.add("active");
   }
+
+  // ballon entre dans le filet
+  const netLeft = scoringTeam === "sen" ? 99 : 1;
+  await moveBallTo(netLeft, randomInt(40, 60), 280);
+
+  if (gk) {
+    gk.classList.remove("active");
+    const gkBase = basePositions.get(gk);
+    if (gkBase) movePlayerTo(gk, gkBase.left, gkBase.top + 8, 200);
+  }
+  shooter.classList.remove("active");
+
+  // ── badge ⚽ + événement avec nom du buteur ──
+  if (shooterPosClass) {
+    addGoalBadge(scoringTeam, shooterPosClass);
+  }
+  addEvent(`⚽ But de ${scorerName} (${teamLabel}) — ${state.senGoals}–${state.fraGoals} | ${state.timer}'`);
+
+  // flash
+  ball.style.transition = "none";
+  ball.style.boxShadow  = scoringTeam === "sen"
+    ? "0 0 32px 10px rgba(100,255,100,1)"
+    : "0 0 32px 10px rgba(255,100,100,1)";
+
+  // célébration
+  attackPlayers.forEach(p => {
+    const side = scoringTeam === "sen" ? randomInt(75, 92) : randomInt(8, 25);
+    movePlayerTo(p, side, randomInt(25, 75), 500);
+  });
+
+  await wait(700);
+
+  // retour centre
+  ball.style.transition = "left 0.6s ease, top 0.6s ease, box-shadow 0.5s ease";
+  ball.style.boxShadow  = "";
+  ball.style.left = "50%";
+  ball.style.top  = "50%";
+
+  await wait(600);
+  resetAllPositions(700);
+  await wait(700);
+}
 
   // ── Animation tir arrêté ──
   async function animateShot(attackTeam) {
@@ -229,14 +320,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     await passBall(attackPlayers, 2, 260);
 
-    // tir vers la cage
     const shotLeft = attackTeam === "sen" ? randomInt(82, 92) : randomInt(8, 18);
     const shotTop  = randomInt(30, 70);
 
     // défenseurs se jettent devant
-    defendPlayers.filter(p => !p.classList.contains(gkClass)).slice(0, 2).forEach(p => {
-      movePlayerTo(p, shotLeft + (attackTeam === "sen" ? -6 : 6), shotTop + randomFloat(-8, 8), 300);
-    });
+    defendPlayers
+      .filter(p => !p.classList.contains(gkClass))
+      .slice(0, 2)
+      .forEach(p => {
+        movePlayerTo(p,
+          shotLeft + (attackTeam === "sen" ? -6 : 6),
+          shotTop  + randomFloat(-8, 8),
+          300
+        );
+      });
 
     await moveBallTo(shotLeft, shotTop, 320);
 
@@ -262,12 +359,11 @@ document.addEventListener("DOMContentLoaded", () => {
     await wait(600);
   }
 
-  // ── Possession avec mouvement réaliste ──
+  // ── Possession avec mouvement collectif ──
   async function animatePossession(team, zone) {
-    const players = team === "sen" ? senPlayers : fraPlayers;
+    const players   = team === "sen" ? senPlayers : fraPlayers;
     const opponents = team === "sen" ? fraPlayers : senPlayers;
 
-    // filtrer joueurs dans la zone
     const zonePlayers = players.filter(p => {
       const base = basePositions.get(p);
       if (!base) return false;
@@ -278,9 +374,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const pool = zonePlayers.length >= 2 ? zonePlayers : players;
 
-    // mouvement collectif : l'équipe monte ou descend selon la zone
+    // équipe monte collectivement
     const pushDir = team === "sen" ? 1 : -1;
-    const push = zone === "attaque" ? 6 * pushDir : zone === "milieu" ? 3 * pushDir : 0;
+    const push    = zone === "attaque" ? 6 * pushDir : zone === "milieu" ? 3 * pushDir : 0;
 
     players.forEach(p => {
       if (p.classList.contains("sen-gk") || p.classList.contains("fra-gk")) return;
@@ -293,18 +389,19 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
 
-    // pression adverse légère
-    opponents.filter(p =>
-      !p.classList.contains("fra-gk") && !p.classList.contains("sen-gk")
-    ).slice(0, 3).forEach(p => {
-      const base = basePositions.get(p);
-      if (!base) return;
-      movePlayerTo(p,
-        Math.min(Math.max(base.left - push * 0.4 + randomFloat(-2, 2), 5), 95),
-        base.top + randomFloat(-2, 2),
-        400
-      );
-    });
+    // pression adverse
+    opponents
+      .filter(p => !p.classList.contains("fra-gk") && !p.classList.contains("sen-gk"))
+      .slice(0, 3)
+      .forEach(p => {
+        const base = basePositions.get(p);
+        if (!base) return;
+        movePlayerTo(p,
+          Math.min(Math.max(base.left - push * 0.4 + randomFloat(-2, 2), 5), 95),
+          base.top + randomFloat(-2, 2),
+          400
+        );
+      });
 
     await passBall(pool, 2, 300);
 
@@ -439,9 +536,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function startMatch() {
     if (state.running) return;
     initBasePositions();
-    state.running      = true;
-    state.timer        = 0;
-    state.targetMargin = randomInt(1, 2);
+    state.running       = true;
+    state.timer         = 0;
+    state.targetMargin  = randomInt(1, 2);
     phaseEl.textContent = "1ère mi-temps";
     addEvent("🟢 Coup d'envoi !");
 
@@ -496,6 +593,12 @@ document.addEventListener("DOMContentLoaded", () => {
     phaseEl.textContent   = "avant le match";
     timerDisp.textContent = "0'";
     scoreEl.textContent   = "0 – 0";
+
+    // vider tous les badges ⚽
+    document.querySelectorAll("[id^='badges-']").forEach(el => {
+      el.textContent = "";
+    });
+
     updateStats();
     clearHighlights();
     addEvent("↺ Match remis à zéro.");

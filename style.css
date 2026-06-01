@@ -450,7 +450,7 @@ html, body {
 #list-sen > div,
 #list-fra > div {
   display: grid;
-  grid-template-columns: 28px 1fr 46px 24px;
+  grid-template-columns: 28px 1fr 46px auto;
   align-items: center;
   gap: 6px;
   padding: 2px 8px;
@@ -469,6 +469,12 @@ html, body {
 #list-sen > div:nth-child(odd),
 #list-fra > div:nth-child(odd) {
   background: rgba(255,255,255,0.03);
+}
+#list-sen > div span:last-child,
+#list-fra > div span:last-child {
+  font-size: 0.85rem;
+  letter-spacing: -2px;
+  white-space: nowrap;
 }
 
 /* ── ACTPANEL ── */
